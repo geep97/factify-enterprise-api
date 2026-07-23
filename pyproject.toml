@@ -1,0 +1,17 @@
+[project]
+name = "factify-enterprise"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bcrypt>=5.0.0",
+    "fastapi[standard]>=0.139.2",
+    "httpx>=0.28.1",
+    "passlib>=1.7.4",
+    "psycopg2-binary>=2.9.12",
+    "pydantic-settings>=2.14.2",
+    "python-dotenv>=1.2.2",
+    "python-jose[cryptography]>=3.5.0",
+    "sqlalchemy>=2.0.51",
+]
