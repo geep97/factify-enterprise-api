@@ -5,14 +5,12 @@ from app.core.bootstrap import (
     register_exception_handlers_for_app,
     register_routes,
 )
-
-from app.core.logging import configure_logging
 from app.core.configuration_validation import validate_configuration
+from app.core.logging import configure_logging
 
 
 def create_app() -> FastAPI:
     configure_logging()
-
     validate_configuration()
 
     app = FastAPI(
