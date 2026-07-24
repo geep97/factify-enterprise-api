@@ -7,10 +7,13 @@ from app.core.bootstrap import (
 )
 
 from app.core.logging import configure_logging
+from app.core.configuration_validation import validate_configuration
 
 
 def create_app() -> FastAPI:
     configure_logging()
+
+    validate_configuration()
 
     app = FastAPI(
         title="Factify Enterprise API",

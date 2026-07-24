@@ -1,3 +1,4 @@
+from typing import Literal
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,7 +11,13 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     FACTIFY_CORE_API_URL: str
     API_KEY_PREFIX: str = "factify_test_"
-    ENVIRONMENT: str = "development"
+
+    ENVIRONMENT: Literal[
+        "development",
+        "testing",
+        "staging",
+        "production",
+    ] = "development"
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
