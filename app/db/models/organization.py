@@ -51,3 +51,10 @@ class Organization(Base):
         uselist=False,
         cascade="all, delete-orphan",
     )
+
+    subscription = relationship(
+        "Subscription",
+        back_populates="organization",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

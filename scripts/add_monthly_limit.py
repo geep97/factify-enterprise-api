@@ -1,24 +1,15 @@
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
+from app.core.config import settings
 
-from app.db.database import engine
+engine = create_engine(settings.DATABASE_URL)
 
+with engine.connect() as conn:
+    result = conn.execute(text("""
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'public'
+        ORDER BY tablename;
+    """))
 
-def main():
-    print("Connecting to database...")
-
-    with engine.begin() as connection:
-        connection.execute(
-            text(
-                """
-                ALTER TABLE organizations
-                ADD COLUMN IF NOT EXISTS monthly_request_limit
-                INTEGER NOT NULL DEFAULT 1000
-                """
-            )
-        )
-
-    print("monthly_request_limit column added successfully.")
-
-
-if __name__ == "__main__":
-    main()
+    for row in result:
+        print(row[0])
