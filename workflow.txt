@@ -1,0 +1,7 @@
+Finish logging (done)
+Application factory (create_app()) to make the app easier to test and configure
+Health/readiness endpoints (/health, /ready)
+Security headers middleware
+Configuration validation at startup
+Docker and deployment
+Testing (pytest)
