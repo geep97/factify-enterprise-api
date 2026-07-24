@@ -4,7 +4,7 @@ from app.core.container import (
     get_usage_service,
     get_verification_service,
 )
-from app.core.dependencies import get_current_api_key
+from app.core.service_dependencies  import get_current_api_key
 from app.db.models.api_key import ApiKey
 from app.schemas.verification import VerificationRequest
 from app.services.usage_service import UsageService

@@ -2,7 +2,9 @@ import time
 
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.core.log_events import log_http_request
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
@@ -13,11 +15,15 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 
         duration_ms = (time.perf_counter() - start) * 1000
 
-        log_http_request(
-            method=request.method,
-            path=request.url.path,
-            status_code=response.status_code,
-            duration_ms=duration_ms,
+        logger.info(
+            "HTTP request completed",
+            extra={
+                "event": "http_request",
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": response.status_code,
+                "duration_ms": round(duration_ms, 2),
+            },
         )
 
         return response

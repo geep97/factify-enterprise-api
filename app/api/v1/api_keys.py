@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from app.core.container import get_api_key_service
-from app.core.dependencies import get_current_api_key
+from app.core.service_dependencies import get_current_api_key
 from app.db.models.api_key import ApiKey
 from app.repositories.api_key_repository import ApiKeyRepository
 from app.db.database import get_db
