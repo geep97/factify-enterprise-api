@@ -5,6 +5,7 @@ from app.core.security import (
 )
 from app.db.models.api_key import ApiKey
 from app.db.models.organization import Organization
+from app.rate_limit.service import RateLimitService
 from app.unit_of_work.unit_of_work import UnitOfWork
 
 
@@ -37,7 +38,13 @@ class ApiKeyService:
             # Flush so PostgreSQL generates organization.id
             self.uow.flush()
 
-            # Create API key
+            # Create default rate limit for the organization
+            RateLimitService.create_default(
+                db=self.uow.db,
+                organization=organization,
+            )
+
+            # Create first API key
             api_key = ApiKey(
                 organization_id=organization.id,
                 name=key_name,
@@ -47,7 +54,7 @@ class ApiKeyService:
 
             self.uow.api_keys.create(api_key)
 
-        # Refresh after the transaction commits
+        # Refresh after commit
         self.uow.refresh(organization)
 
         return organization, raw_api_key

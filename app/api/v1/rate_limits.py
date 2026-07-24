@@ -7,24 +7,17 @@ from app.rate_limit.dependencies import enforce_rate_limit
 from app.rate_limit.limiter import RateLimiter
 
 router = APIRouter(
-    prefix="/protected",
-    tags=["Protected"],
+    prefix="/rate-limits",
+    tags=["Rate Limits"],
 )
 
 
 @router.get("/me")
-def who_am_i(
+def my_rate_limit(
     organization: Organization = Depends(enforce_rate_limit),
     db: Session = Depends(get_db),
 ):
-    RateLimiter.record_request(
+    return RateLimiter.get_status(
         db=db,
         organization=organization,
-        endpoint="/protected/me",
-        status_code=200,
     )
-
-    return {
-        "organization_id": organization.id,
-        "organization_name": organization.name,
-    }
