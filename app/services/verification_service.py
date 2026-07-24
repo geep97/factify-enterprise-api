@@ -1,25 +1,20 @@
-import httpx
-
-from app.core.config import settings
+from app.clients.factify_client import FactifyClient
 
 
-async def verify_with_factify(
-    content: str,
-    mode: str,
-) -> dict:
-    url = f"{settings.FACTIFY_CORE_API_URL}/api/verify"
+class VerificationService:
+    def __init__(
+        self,
+        client: FactifyClient,
+    ):
+        self.client = client
 
-    payload = {
-        "content": content,
-        "mode": mode,
-    }
+    async def verify(
+        self,
+        content: str,
+        mode: str,
+    ) -> dict:
 
-    async with httpx.AsyncClient(timeout=70.0) as client:
-        response = await client.post(
-            url,
-            json=payload,
+        return await self.client.verify(
+            content=content,
+            mode=mode,
         )
-
-    response.raise_for_status()
-
-    return response.json()

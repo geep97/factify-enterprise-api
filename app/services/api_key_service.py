@@ -1,38 +1,77 @@
-import secrets
-
-from sqlalchemy.orm import Session
-
-from app.core.security import generate_api_key, get_key_prefix, hash_api_key
+from app.core.security import (
+    generate_api_key,
+    get_key_prefix,
+    hash_api_key,
+)
 from app.db.models.api_key import ApiKey
 from app.db.models.organization import Organization
+from app.unit_of_work.unit_of_work import UnitOfWork
 
 
-def create_organization_with_api_key(
-    db: Session,
-    organization_name: str,
-    organization_slug: str,
-    key_name: str = "Default API Key",
-) -> tuple[Organization, str]:
+class ApiKeyService:
+    def __init__(self, uow: UnitOfWork):
+        self.uow = uow
 
-    organization = Organization(
-        name=organization_name,
-        slug=organization_slug,
-    )
+    # ============================================================
+    # CREATE ORGANIZATION + FIRST API KEY
+    # ============================================================
 
-    db.add(organization)
-    db.flush()
+    def create_organization_with_api_key(
+        self,
+        organization_name: str,
+        organization_slug: str,
+        key_name: str = "Default API Key",
+    ) -> tuple[Organization, str]:
 
-    raw_api_key = generate_api_key()
+        organization = Organization(
+            name=organization_name,
+            slug=organization_slug,
+        )
 
-    api_key = ApiKey(
-        organization_id=organization.id,
-        name=key_name,
-        key_hash=hash_api_key(raw_api_key),
-        key_prefix=get_key_prefix(raw_api_key),
-    )
+        raw_api_key = generate_api_key()
 
-    db.add(api_key)
-    db.commit()
-    db.refresh(organization)
+        with self.uow:
+            # Create organization
+            self.uow.organizations.create(organization)
 
-    return organization, raw_api_key
+            # Flush so PostgreSQL generates organization.id
+            self.uow.flush()
+
+            # Create API key
+            api_key = ApiKey(
+                organization_id=organization.id,
+                name=key_name,
+                key_hash=hash_api_key(raw_api_key),
+                key_prefix=get_key_prefix(raw_api_key),
+            )
+
+            self.uow.api_keys.create(api_key)
+
+        # Refresh after the transaction commits
+        self.uow.refresh(organization)
+
+        return organization, raw_api_key
+
+    # ============================================================
+    # CREATE ADDITIONAL API KEY
+    # ============================================================
+
+    def create_additional_api_key(
+        self,
+        organization: Organization,
+        key_name: str,
+    ) -> str:
+
+        raw_api_key = generate_api_key()
+
+        api_key = ApiKey(
+            organization_id=organization.id,
+            name=key_name,
+            key_hash=hash_api_key(raw_api_key),
+            key_prefix=get_key_prefix(raw_api_key),
+        )
+
+        with self.uow:
+            self.uow.api_keys.create(api_key)
+
+        return raw_api_key

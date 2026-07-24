@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base
@@ -21,6 +21,12 @@ class Organization(Base):
         unique=True,
         nullable=False,
         index=True,
+    )
+
+    monthly_request_limit: Mapped[int] = mapped_column(
+        Integer,
+        default=1000,
+        nullable=False,
     )
 
     created_at: Mapped[datetime] = mapped_column(
