@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.api_key_repository import ApiKeyRepository
 from app.repositories.organization_repository import OrganizationRepository
+from app.repositories.subscription_repository import SubscriptionRepository
 from app.repositories.usage_repository import UsageRepository
 
 
@@ -11,6 +12,7 @@ class UnitOfWork:
 
         self._api_keys = None
         self._organizations = None
+        self._subscriptions = None
         self._usage = None
 
     # ============================================================
@@ -28,6 +30,12 @@ class UnitOfWork:
         if self._organizations is None:
             self._organizations = OrganizationRepository(self.db)
         return self._organizations
+
+    @property
+    def subscriptions(self) -> SubscriptionRepository:
+        if self._subscriptions is None:
+            self._subscriptions = SubscriptionRepository(self.db)
+        return self._subscriptions
 
     @property
     def usage(self) -> UsageRepository:

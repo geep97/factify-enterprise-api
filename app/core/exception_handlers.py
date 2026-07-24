@@ -2,9 +2,14 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.core.exceptions import (
-    InvalidApiKeyException,
     ApiKeyInactiveException,
+    FactifyUnavailableException,
+    InvalidApiKeyException,
+    InvalidSubscriptionPlanException,
     MonthlyLimitExceededException,
+    SubscriptionAlreadyActiveException,
+    SubscriptionAlreadyCancelledException,
+    SubscriptionNotFoundException,
 )
 from app.core.logging import get_logger
 
@@ -81,6 +86,76 @@ def register_exception_handlers(app: FastAPI):
 
         return JSONResponse(
             status_code=429,
+            content={"detail": str(exc)},
+        )
+
+    # ============================================================
+    # SUBSCRIPTION NOT FOUND
+    # ============================================================
+
+    @app.exception_handler(SubscriptionNotFoundException)
+    async def subscription_not_found_handler(
+        request: Request,
+        exc: SubscriptionNotFoundException,
+    ):
+        return JSONResponse(
+            status_code=404,
+            content={"detail": str(exc)},
+        )
+
+    # ============================================================
+    # INVALID SUBSCRIPTION PLAN
+    # ============================================================
+
+    @app.exception_handler(InvalidSubscriptionPlanException)
+    async def invalid_subscription_plan_handler(
+        request: Request,
+        exc: InvalidSubscriptionPlanException,
+    ):
+        return JSONResponse(
+            status_code=400,
+            content={"detail": str(exc)},
+        )
+
+    # ============================================================
+    # SUBSCRIPTION ALREADY CANCELLED
+    # ============================================================
+
+    @app.exception_handler(SubscriptionAlreadyCancelledException)
+    async def subscription_cancelled_handler(
+        request: Request,
+        exc: SubscriptionAlreadyCancelledException,
+    ):
+        return JSONResponse(
+            status_code=409,
+            content={"detail": str(exc)},
+        )
+
+    # ============================================================
+    # SUBSCRIPTION ALREADY ACTIVE
+    # ============================================================
+
+    @app.exception_handler(SubscriptionAlreadyActiveException)
+    async def subscription_active_handler(
+        request: Request,
+        exc: SubscriptionAlreadyActiveException,
+    ):
+        return JSONResponse(
+            status_code=409,
+            content={"detail": str(exc)},
+        )
+
+    # ============================================================
+    # FACTIFY UNAVAILABLE
+    # ============================================================
+
+    @app.exception_handler(FactifyUnavailableException)
+    async def factify_unavailable_handler(
+        request: Request,
+        exc: FactifyUnavailableException,
+    ):
+        return JSONResponse(
+            status_code=503,
             content={"detail": str(exc)},
         )
 

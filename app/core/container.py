@@ -2,6 +2,7 @@ from fastapi import Depends
 
 from app.clients.factify_client import FactifyClient
 from app.services.api_key_service import ApiKeyService
+from app.services.subscription_service import SubscriptionService
 from app.services.usage_service import UsageService
 from app.services.verification_service import VerificationService
 from app.unit_of_work.dependencies import get_unit_of_work
@@ -24,6 +25,12 @@ def get_api_key_service(
     uow: UnitOfWork = Depends(get_unit_of_work),
 ):
     return ApiKeyService(uow)
+
+
+def get_subscription_service(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+):
+    return SubscriptionService(uow)
 
 
 def get_usage_service(
