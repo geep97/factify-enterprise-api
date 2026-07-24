@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from app.core.exceptions import InvalidSubscriptionPlanException
+
 
 @dataclass(frozen=True)
 class SubscriptionPlan:
@@ -34,3 +36,12 @@ PLANS = {
     PRO.name: PRO,
     ENTERPRISE.name: ENTERPRISE,
 }
+
+
+def get_plan(name: str) -> SubscriptionPlan:
+    plan = PLANS.get(name)
+
+    if plan is None:
+        raise InvalidSubscriptionPlanException()
+
+    return plan

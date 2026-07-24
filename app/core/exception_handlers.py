@@ -179,5 +179,5 @@ def register_exception_handlers(app: FastAPI):
 
         return JSONResponse(
             status_code=500,
-            content={"detail": "Internal Server Error"},
+            content={"detail": "Verification service is currently unavailable. Please try again later."},
         )

@@ -1,0 +1,64 @@
+from pydantic import BaseModel, ConfigDict
+
+
+# ============================================================
+# ORGANIZATION
+# ============================================================
+
+class DashboardOrganization(BaseModel):
+    id: int
+    name: str
+    slug: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ============================================================
+# SUBSCRIPTION
+# ============================================================
+
+class DashboardSubscription(BaseModel):
+    plan_name: str
+    status: str
+    monthly_request_limit: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ============================================================
+# USAGE
+# ============================================================
+
+class DashboardUsage(BaseModel):
+    requests_used: int
+    requests_remaining: int
+
+
+# ============================================================
+# API KEYS
+# ============================================================
+
+class DashboardApiKeys(BaseModel):
+    total: int
+    active: int
+    inactive: int
+
+
+# ============================================================
+# RATE LIMIT
+# ============================================================
+
+class DashboardRateLimit(BaseModel):
+    requests_per_minute: int
+
+
+# ============================================================
+# RESPONSE
+# ============================================================
+
+class DashboardResponse(BaseModel):
+    organization: DashboardOrganization
+    subscription: DashboardSubscription
+    usage: DashboardUsage
+    api_keys: DashboardApiKeys
+    rate_limit: DashboardRateLimit

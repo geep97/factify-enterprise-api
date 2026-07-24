@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.api_key_repository import ApiKeyRepository
 from app.repositories.organization_repository import OrganizationRepository
+from app.repositories.rate_limit_repository import RateLimitRepository
 from app.repositories.subscription_repository import SubscriptionRepository
 from app.repositories.usage_repository import UsageRepository
 
@@ -14,6 +15,7 @@ class UnitOfWork:
         self._organizations = None
         self._subscriptions = None
         self._usage = None
+        self._rate_limits = None
 
     # ============================================================
     # REPOSITORIES
@@ -42,6 +44,12 @@ class UnitOfWork:
         if self._usage is None:
             self._usage = UsageRepository(self.db)
         return self._usage
+
+    @property
+    def rate_limits(self) -> RateLimitRepository:
+        if self._rate_limits is None:
+            self._rate_limits = RateLimitRepository(self.db)
+        return self._rate_limits
 
     # ============================================================
     # CONTEXT MANAGER
