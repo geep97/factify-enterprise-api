@@ -1,7 +1,9 @@
-Finish logging (done)
-Application factory (create_app()) to make the app easier to test and configure
-Health/readiness endpoints (/health, /ready)
-Security headers middleware
-Configuration validation at startup
-Docker and deployment
-Testing (pytest)
+| Sprint | Feature                   | Status |
+| ------ | ------------------------- | ------ |
+| 1      | Project setup             | ✅      |
+| 2      | Authentication & API keys | ✅      |
+| 3      | Rate limiting             | ✅      |
+| 4      | Verification API          | ⏳      |
+| 5      | Deploy API                | ⏳      |
+| 6      | Frontend integration      | ⏳      |
+| 7      | Production hardening      | ⏳      |

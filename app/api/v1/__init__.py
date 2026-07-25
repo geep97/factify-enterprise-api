@@ -1,9 +1,12 @@
 from fastapi import APIRouter
 
 from .api_keys import router as api_keys_router
+from .auth import router as auth_router
+from .dashboard import router as dashboard_router
 from .health import router as health_router
 from .protected import router as protected_router
 from .rate_limits import router as rate_limit_router
+from .subscription import router as subscription_router
 from .verification import router as verification_router
 
 router = APIRouter()
@@ -12,6 +15,12 @@ router.include_router(
     health_router,
     prefix="/health",
     tags=["Health"],
+)
+
+router.include_router(
+    auth_router,
+    prefix="/auth",
+    tags=["Auth"],
 )
 
 router.include_router(
@@ -31,4 +40,16 @@ router.include_router(
 
 router.include_router(
     rate_limit_router,
+)
+
+router.include_router(
+    subscription_router,
+    prefix="/subscription",
+    tags=["Subscription"],
+)
+
+router.include_router(
+    dashboard_router,
+    prefix="/dashboard",
+    tags=["Dashboard"],
 )

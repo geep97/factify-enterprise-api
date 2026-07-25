@@ -6,12 +6,14 @@ from app.core.security import (
 from app.db.models.api_key import ApiKey
 from app.db.models.organization import Organization
 from app.rate_limit.service import RateLimitService
+from app.services.subscription_service import SubscriptionService
 from app.unit_of_work.unit_of_work import UnitOfWork
 
 
 class ApiKeyService:
     def __init__(self, uow: UnitOfWork):
         self.uow = uow
+        self.subscription_service = SubscriptionService(uow)
 
     # ============================================================
     # CREATE ORGANIZATION + FIRST API KEY
@@ -38,7 +40,10 @@ class ApiKeyService:
             # Flush so PostgreSQL generates organization.id
             self.uow.flush()
 
-            # Create default rate limit for the organization
+            # Create default subscription
+            self.subscription_service.create_default(organization)
+
+            # Create default rate limit
             RateLimitService.create_default(
                 db=self.uow.db,
                 organization=organization,
