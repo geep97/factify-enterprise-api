@@ -1,11 +1,13 @@
 from app.core.exceptions import MonthlyLimitExceededException
 from app.db.models.api_key import ApiKey
+from app.services.subscription_service import SubscriptionService
 from app.unit_of_work.unit_of_work import UnitOfWork
 
 
 class UsageService:
     def __init__(self, uow: UnitOfWork):
         self.uow = uow
+        self.subscription_service = SubscriptionService(uow)
 
     # ============================================================
     # CHECK MONTHLY LIMIT
@@ -19,11 +21,18 @@ class UsageService:
             api_key.organization_id
         )
 
-        organization = api_key.organization
+        subscription = self.subscription_service.get_by_organization(
+            api_key.organization_id
+        )
 
-        if request_count >= organization.monthly_request_limit:
+        if subscription is None:
+            raise ValueError(
+                f"No subscription found for organization {api_key.organization_id}"
+            )
+
+        if request_count >= subscription.monthly_request_limit:
             raise MonthlyLimitExceededException(
-                limit=organization.monthly_request_limit,
+                limit=subscription.monthly_request_limit,
                 used=request_count,
             )
 

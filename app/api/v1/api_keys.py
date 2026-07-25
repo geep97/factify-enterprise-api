@@ -2,8 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from app.core.container import get_api_key_service
-from app.core.service_dependencies import get_current_api_key
+from app.auth.dependencies import (
+    get_current_api_key,
+    get_current_organization_any,
+    get_current_user,
+)
 from app.db.models.api_key import ApiKey
+from app.db.models.organization import Organization
+from app.db.models.user import User
 from app.repositories.api_key_repository import ApiKeyRepository
 from app.db.database import get_db
 from sqlalchemy.orm import Session
@@ -14,6 +20,7 @@ from app.schemas.api_key import (
     CreateAdditionalApiKeyResponse,
     CreateApiKeyRequest,
     CreateApiKeyResponse,
+    RotateApiKeyResponse,
 )
 from app.services.api_key_service import ApiKeyService
 
@@ -22,9 +29,26 @@ router = APIRouter()
 
 # ============================================================
 # CREATE NEW ORGANIZATION + FIRST API KEY
+#
+# DEPRECATED: creates an organization with no login/email
+# attached, which leaves it permanently unrecoverable if the
+# key is lost. Use POST /auth/register instead, which creates
+# the organization, a login, AND the first API key together.
+# Kept functional for backwards compatibility only.
 # ============================================================
 
-@router.post("/", response_model=CreateApiKeyResponse)
+@router.post(
+    "/",
+    response_model=CreateApiKeyResponse,
+    deprecated=True,
+    summary="[Deprecated] Create organization + API key (no login)",
+    description=(
+        "Deprecated. Creates an organization and API key with no "
+        "login attached. Use POST /auth/register instead, which "
+        "creates the organization, a login, and the first API key "
+        "together in one step."
+    ),
+)
 def create_api_key(
     request: CreateApiKeyRequest,
     service: ApiKeyService = Depends(get_api_key_service),
@@ -51,20 +75,20 @@ def create_api_key(
 
 
 # ============================================================
-# LIST API KEYS
+# LIST API KEYS (login required)
 # ============================================================
 
 @router.get("/", response_model=ApiKeyListResponse)
 def list_api_keys(
-    api_key: ApiKey = Depends(get_current_api_key),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     repo = ApiKeyRepository(db)
 
-    keys = repo.list_by_organization(api_key.organization_id)
+    keys = repo.list_by_organization(user.organization_id)
 
     return ApiKeyListResponse(
-        organization_id=api_key.organization_id,
+        organization_id=user.organization_id,
         keys=[
             ApiKeyResponse(
                 id=key.id,
@@ -80,17 +104,15 @@ def list_api_keys(
 
 
 # ============================================================
-# CREATE ADDITIONAL KEY
+# CREATE ADDITIONAL KEY (API key OR login token)
 # ============================================================
 
 @router.post("/additional", response_model=CreateAdditionalApiKeyResponse)
 def create_additional_api_key_endpoint(
     request: CreateAdditionalApiKeyRequest,
-    api_key: ApiKey = Depends(get_current_api_key),
+    organization: Organization = Depends(get_current_organization_any),
     service: ApiKeyService = Depends(get_api_key_service),
 ):
-    organization = api_key.organization
-
     raw_api_key = service.create_additional_api_key(
         organization=organization,
         key_name=request.key_name,
@@ -118,3 +140,69 @@ def test_api_key(
         "organization_id": api_key.organization_id,
         "message": "API key is valid",
     }
+
+
+# ============================================================
+# REVOKE API KEY (login required)
+# ============================================================
+
+@router.delete("/{key_id}", response_model=ApiKeyResponse)
+def revoke_api_key(
+    key_id: int,
+    user: User = Depends(get_current_user),
+    service: ApiKeyService = Depends(get_api_key_service),
+):
+    try:
+        api_key = service.revoke_api_key(
+            organization_id=user.organization_id,
+            key_id=key_id,
+        )
+
+    except ValueError:
+        raise HTTPException(
+            status_code=404,
+            detail="API key not found.",
+        )
+
+    return ApiKeyResponse(
+        id=api_key.id,
+        name=api_key.name,
+        key_prefix=api_key.key_prefix,
+        is_active=api_key.is_active,
+        created_at=api_key.created_at,
+        last_used_at=api_key.last_used_at,
+    )
+
+
+# ============================================================
+# ROTATE API KEY (login required)
+# ============================================================
+
+@router.post("/{key_id}/rotate", response_model=RotateApiKeyResponse)
+def rotate_api_key_endpoint(
+    key_id: int,
+    user: User = Depends(get_current_user),
+    service: ApiKeyService = Depends(get_api_key_service),
+):
+    try:
+        old_key, new_key, raw_api_key = service.rotate_api_key(
+            organization_id=user.organization_id,
+            key_id=key_id,
+        )
+
+    except ValueError:
+        raise HTTPException(
+            status_code=404,
+            detail="API key not found.",
+        )
+
+    return RotateApiKeyResponse(
+        old_key_id=old_key.id,
+        new_key_id=new_key.id,
+        api_key=raw_api_key,
+        key_name=new_key.name,
+        warning=(
+            "Store this API key securely. It will not be shown again. "
+            "The old key has been deactivated."
+        ),
+    )
