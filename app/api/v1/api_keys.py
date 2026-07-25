@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 
 from app.core.container import get_api_key_service
-from app.auth.dependencies import get_current_api_key
+from app.auth.dependencies import get_current_api_key, get_current_user
 from app.db.models.api_key import ApiKey
+from app.db.models.user import User
 from app.repositories.api_key_repository import ApiKeyRepository
 from app.db.database import get_db
 from sqlalchemy.orm import Session
@@ -51,20 +52,20 @@ def create_api_key(
 
 
 # ============================================================
-# LIST API KEYS
+# LIST API KEYS (login required)
 # ============================================================
 
 @router.get("/", response_model=ApiKeyListResponse)
 def list_api_keys(
-    api_key: ApiKey = Depends(get_current_api_key),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     repo = ApiKeyRepository(db)
 
-    keys = repo.list_by_organization(api_key.organization_id)
+    keys = repo.list_by_organization(user.organization_id)
 
     return ApiKeyListResponse(
-        organization_id=api_key.organization_id,
+        organization_id=user.organization_id,
         keys=[
             ApiKeyResponse(
                 id=key.id,

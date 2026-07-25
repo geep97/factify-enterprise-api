@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     FACTIFY_CORE_API_URL: str
     API_KEY_PREFIX: str = "factify_test_"
 
+    JWT_SECRET_KEY: str
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60
+
     ENVIRONMENT: Literal[
         "development",
         "testing",

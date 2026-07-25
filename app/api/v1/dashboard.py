@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 
-from app.auth.dependencies import get_current_api_key
+from app.auth.dependencies import get_current_user
 from app.core.container import get_dashboard_service
-from app.db.models.api_key import ApiKey
+from app.db.models.user import User
 from app.schemas.dashboard import DashboardResponse
 from app.services.dashboard_service import DashboardService
 
@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.get("/", response_model=DashboardResponse)
 def get_dashboard(
-    api_key: ApiKey = Depends(get_current_api_key),
+    user: User = Depends(get_current_user),
     service: DashboardService = Depends(get_dashboard_service),
 ):
-    return service.get_dashboard(api_key.organization_id)
+    return service.get_dashboard(user.organization_id)
