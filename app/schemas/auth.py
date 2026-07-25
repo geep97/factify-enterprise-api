@@ -12,6 +12,15 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8)
 
 
+class RegisterResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    organization_id: int
+    organization_name: str
+    api_key: str
+    warning: str
+
+
 # ============================================================
 # LOGIN
 # ============================================================

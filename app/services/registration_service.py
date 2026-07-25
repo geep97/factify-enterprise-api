@@ -1,4 +1,10 @@
-from app.core.security import hash_password
+from app.core.security import (
+    generate_api_key,
+    get_key_prefix,
+    hash_api_key,
+    hash_password,
+)
+from app.db.models.api_key import ApiKey
 from app.db.models.organization import Organization
 from app.db.models.user import User
 from app.rate_limit.service import RateLimitService
@@ -12,7 +18,7 @@ class RegistrationService:
         self.subscription_service = SubscriptionService(uow)
 
     # ============================================================
-    # REGISTER ORGANIZATION + USER
+    # REGISTER ORGANIZATION + USER + FIRST API KEY
     # ============================================================
 
     def register(
@@ -21,7 +27,8 @@ class RegistrationService:
         organization_slug: str,
         email: str,
         password: str,
-    ) -> tuple[Organization, User]:
+        key_name: str = "Default API Key",
+    ) -> tuple[Organization, User, str]:
 
         organization = Organization(
             name=organization_name,
@@ -32,6 +39,8 @@ class RegistrationService:
             email=email,
             hashed_password=hash_password(password),
         )
+
+        raw_api_key = generate_api_key()
 
         with self.uow:
             # Create organization
@@ -53,8 +62,18 @@ class RegistrationService:
             user.organization_id = organization.id
             self.uow.users.create(user)
 
+            # Create the organization's first API key
+            api_key = ApiKey(
+                organization_id=organization.id,
+                name=key_name,
+                key_hash=hash_api_key(raw_api_key),
+                key_prefix=get_key_prefix(raw_api_key),
+            )
+
+            self.uow.api_keys.create(api_key)
+
         # Refresh after commit
         self.uow.refresh(organization)
         self.uow.refresh(user)
 
-        return organization, user
+        return organization, user, raw_api_key

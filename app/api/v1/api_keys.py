@@ -29,9 +29,26 @@ router = APIRouter()
 
 # ============================================================
 # CREATE NEW ORGANIZATION + FIRST API KEY
+#
+# DEPRECATED: creates an organization with no login/email
+# attached, which leaves it permanently unrecoverable if the
+# key is lost. Use POST /auth/register instead, which creates
+# the organization, a login, AND the first API key together.
+# Kept functional for backwards compatibility only.
 # ============================================================
 
-@router.post("/", response_model=CreateApiKeyResponse)
+@router.post(
+    "/",
+    response_model=CreateApiKeyResponse,
+    deprecated=True,
+    summary="[Deprecated] Create organization + API key (no login)",
+    description=(
+        "Deprecated. Creates an organization and API key with no "
+        "login attached. Use POST /auth/register instead, which "
+        "creates the organization, a login, and the first API key "
+        "together in one step."
+    ),
+)
 def create_api_key(
     request: CreateApiKeyRequest,
     service: ApiKeyService = Depends(get_api_key_service),

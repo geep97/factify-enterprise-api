@@ -11,6 +11,7 @@ from app.db.models.user import User
 from app.schemas.auth import (
     LoginRequest,
     RegisterRequest,
+    RegisterResponse,
     TokenResponse,
     UserResponse,
 )
@@ -23,13 +24,13 @@ router = APIRouter()
 # REGISTER
 # ============================================================
 
-@router.post("/register", response_model=TokenResponse)
+@router.post("/register", response_model=RegisterResponse)
 def register(
     request: RegisterRequest,
     service: RegistrationService = Depends(get_registration_service),
 ):
     try:
-        organization, user = service.register(
+        organization, user, raw_api_key = service.register(
             organization_name=request.organization_name,
             organization_slug=request.organization_slug,
             email=request.email,
@@ -44,7 +45,13 @@ def register(
 
     access_token = create_access_token({"sub": str(user.id)})
 
-    return TokenResponse(access_token=access_token)
+    return RegisterResponse(
+        access_token=access_token,
+        organization_id=organization.id,
+        organization_name=organization.name,
+        api_key=raw_api_key,
+        warning="Store this API key securely. It will not be shown again.",
+    )
 
 
 # ============================================================
