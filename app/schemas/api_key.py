@@ -56,3 +56,11 @@ class CreateAdditionalApiKeyResponse(BaseModel):
     api_key: str
     key_name: str
     warning: str
+
+
+class RotateApiKeyResponse(BaseModel):
+    old_key_id: int
+    new_key_id: int
+    api_key: str
+    key_name: str
+    warning: str
