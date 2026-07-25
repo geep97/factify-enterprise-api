@@ -33,7 +33,10 @@ class DashboardService:
             organization_id
         )
 
-        usage = self.uow.usage.get_current_month(
+        if subscription is None:
+            raise ValueError("Subscription not found.")
+
+        requests_used = self.uow.usage.get_monthly_usage_count(
             organization_id
         )
 
@@ -45,17 +48,10 @@ class DashboardService:
             organization_id
         )
 
-        requests_used = (
-            usage.requests_used
-            if usage is not None
-            else 0
-        )
+        if rate_limit is None:
+            raise ValueError("Rate limit configuration not found.")
 
-        monthly_limit = (
-            subscription.monthly_request_limit
-            if subscription is not None
-            else 0
-        )
+        monthly_limit = subscription.monthly_request_limit
 
         active_keys = sum(
             1 for key in api_keys if key.is_active
@@ -83,6 +79,6 @@ class DashboardService:
                 inactive=inactive_keys,
             ),
             rate_limit=DashboardRateLimit(
-                requests_per_minute=rate_limit.requests_per_minute
+                requests_per_hour=rate_limit.requests_per_hour
             ),
         )

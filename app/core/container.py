@@ -2,6 +2,7 @@ from fastapi import Depends
 
 from app.clients.factify_client import FactifyClient
 from app.services.api_key_service import ApiKeyService
+from app.services.dashboard_service import DashboardService
 from app.services.subscription_service import SubscriptionService
 from app.services.usage_service import UsageService
 from app.services.verification_service import VerificationService
@@ -43,3 +44,9 @@ def get_verification_service(
     client: FactifyClient = Depends(get_factify_client),
 ):
     return VerificationService(client)
+
+
+def get_dashboard_service(
+    uow: UnitOfWork = Depends(get_unit_of_work),
+):
+    return DashboardService(uow)

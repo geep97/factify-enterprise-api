@@ -49,7 +49,7 @@ class DashboardApiKeys(BaseModel):
 # ============================================================
 
 class DashboardRateLimit(BaseModel):
-    requests_per_minute: int
+    requests_per_hour: int
 
 
 # ============================================================
