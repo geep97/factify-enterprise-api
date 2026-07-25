@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60
 
+    ALLOWED_ORIGINS: str = "http://localhost:3000"
+
     ENVIRONMENT: Literal[
         "development",
         "testing",
