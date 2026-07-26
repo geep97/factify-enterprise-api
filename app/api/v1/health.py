@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, status,HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-
 
 from app.db.database import get_db
 
@@ -43,7 +42,7 @@ def _check_required_tables(db: Session) -> dict[str, bool]:
     return tables
 
 
-@router.get("/live")
+@router.api_route("/live", methods=["GET", "HEAD"])
 def liveness():
     """
     Liveness probe.
@@ -52,11 +51,15 @@ def liveness():
     """
     return {
         "status": "alive",
+        "service": "factify-enterprise-api",
     }
 
 
 @router.get("/db")
 def database_health(db: Session = Depends(get_db)):
+    """
+    Database connectivity check.
+    """
     _check_database(db)
 
     return {
@@ -67,6 +70,9 @@ def database_health(db: Session = Depends(get_db)):
 
 @router.get("/tables")
 def check_enterprise_tables(db: Session = Depends(get_db)):
+    """
+    Check that required database tables exist.
+    """
     return {
         "status": "healthy",
         "tables": _check_required_tables(db),
