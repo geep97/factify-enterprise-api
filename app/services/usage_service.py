@@ -51,6 +51,7 @@ class UsageService:
                 organization_id=api_key.organization_id,
                 endpoint=endpoint,
                 status_code=status_code,
+                api_key_id=api_key.id,
             )
 
             self.uow.api_keys.update_last_used(api_key)

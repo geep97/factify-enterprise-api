@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from app.schemas.dashboard import (
     DashboardApiKeys,
     DashboardOrganization,
@@ -5,6 +7,8 @@ from app.schemas.dashboard import (
     DashboardResponse,
     DashboardSubscription,
     DashboardUsage,
+    DashboardUsagePoint,
+    DashboardUsageSeriesResponse,
 )
 from app.unit_of_work.unit_of_work import UnitOfWork
 
@@ -81,4 +85,62 @@ class DashboardService:
             rate_limit=DashboardRateLimit(
                 requests_per_hour=rate_limit.requests_per_hour
             ),
+        )
+
+    # ============================================================
+    # GET USAGE SERIES (for charts)
+    # ============================================================
+
+    def get_usage_series(
+        self,
+        organization_id: int,
+        api_key_id: int | None = None,
+        days: int = 30,
+    ) -> DashboardUsageSeriesResponse:
+        """
+        Daily request counts for the last `days` days, optionally
+        scoped to a single API key.
+
+        Raises:
+            ValueError: if api_key_id is given but doesn't exist
+                        or belongs to a different organization.
+        """
+
+        if api_key_id is not None:
+            api_key = self.uow.api_keys.get_by_id(api_key_id)
+
+            if api_key is None or api_key.organization_id != organization_id:
+                raise ValueError("API key not found.")
+
+        now = datetime.now(timezone.utc)
+        start_day = (now - timedelta(days=days - 1)).date()
+        since = datetime(
+            start_day.year,
+            start_day.month,
+            start_day.day,
+            tzinfo=timezone.utc,
+        )
+
+        rows = self.uow.usage.get_daily_usage(
+            organization_id=organization_id,
+            since=since,
+            api_key_id=api_key_id,
+        )
+
+        counts_by_date = {row.day.date(): row.count for row in rows}
+
+        points = [
+            DashboardUsagePoint(
+                date=(start_day + timedelta(days=offset)).isoformat(),
+                count=counts_by_date.get(
+                    start_day + timedelta(days=offset), 0
+                ),
+            )
+            for offset in range(days)
+        ]
+
+        return DashboardUsageSeriesResponse(
+            api_key_id=api_key_id,
+            days=days,
+            points=points,
         )

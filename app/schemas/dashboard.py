@@ -62,3 +62,18 @@ class DashboardResponse(BaseModel):
     usage: DashboardUsage
     api_keys: DashboardApiKeys
     rate_limit: DashboardRateLimit
+
+
+# ============================================================
+# USAGE SERIES (for charts)
+# ============================================================
+
+class DashboardUsagePoint(BaseModel):
+    date: str
+    count: int
+
+
+class DashboardUsageSeriesResponse(BaseModel):
+    api_key_id: int | None
+    days: int
+    points: list[DashboardUsagePoint]

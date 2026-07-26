@@ -17,6 +17,12 @@ class UsageRecord(Base):
         index=True,
     )
 
+    api_key_id: Mapped[int | None] = mapped_column(
+        ForeignKey("api_keys.id"),
+        nullable=True,
+        index=True,
+    )
+
     endpoint: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
