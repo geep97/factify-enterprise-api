@@ -6,7 +6,11 @@ from app.db.models import Organization, RateLimit
 class RateLimitService:
     """Service for managing organization rate limits."""
 
-    DEFAULT_REQUESTS_PER_HOUR = 1000
+    # Deliberately well below the Free plan's monthly_request_limit
+    # (1,000) — a rate limit equal to or above the monthly cap does
+    # not actually pace usage: it would let a client exhaust the
+    # entire month's quota within a single hour.
+    DEFAULT_REQUESTS_PER_HOUR = 100
 
     @staticmethod
     def create_default(
