@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.api_key_repository import ApiKeyRepository
 from app.repositories.organization_repository import OrganizationRepository
+from app.repositories.payment_transaction_repository import PaymentTransactionRepository
 from app.repositories.rate_limit_repository import RateLimitRepository
 from app.repositories.subscription_repository import SubscriptionRepository
 from app.repositories.usage_repository import UsageRepository
@@ -18,6 +19,7 @@ class UnitOfWork:
         self._usage = None
         self._rate_limits = None
         self._users = None
+        self._payment_transactions = None
 
     # ============================================================
     # REPOSITORIES
@@ -58,6 +60,12 @@ class UnitOfWork:
         if self._users is None:
             self._users = UserRepository(self.db)
         return self._users
+
+    @property
+    def payment_transactions(self) -> PaymentTransactionRepository:
+        if self._payment_transactions is None:
+            self._payment_transactions = PaymentTransactionRepository(self.db)
+        return self._payment_transactions
 
     # ============================================================
     # CONTEXT MANAGER

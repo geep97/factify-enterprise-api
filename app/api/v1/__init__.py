@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from .api_keys import router as api_keys_router
 from .auth import router as auth_router
+from .billing import router as billing_router
 from .dashboard import router as dashboard_router
 from .health import router as health_router
 from .protected import router as protected_router
@@ -52,4 +53,10 @@ router.include_router(
     dashboard_router,
     prefix="/dashboard",
     tags=["Dashboard"],
+)
+
+router.include_router(
+    billing_router,
+    prefix="/billing",
+    tags=["Billing"],
 )

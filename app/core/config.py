@@ -18,6 +18,10 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: str = "http://localhost:3000"
 
+    PAYSTACK_SECRET_KEY: str
+    PAYSTACK_PUBLIC_KEY: str
+    FRONTEND_URL: str = "http://localhost:3000"
+
     ENVIRONMENT: Literal[
         "development",
         "testing",
