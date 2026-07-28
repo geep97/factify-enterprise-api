@@ -46,6 +46,19 @@ class Subscription(Base):
         nullable=False,
     )
 
+    # A scheduled downgrade, applied lazily once
+    # pending_plan_effective_at has passed. Both null
+    # when no downgrade is pending.
+    pending_plan_name: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+
+    pending_plan_effective_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
     organization = relationship(
         "Organization",
         back_populates="subscription",

@@ -22,6 +22,8 @@ class SubscriptionResponse(SubscriptionBase):
     organization_id: int
     starts_at: datetime
     renews_at: datetime
+    pending_plan_name: str | None = None
+    pending_plan_effective_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -32,6 +34,14 @@ class SubscriptionResponse(SubscriptionBase):
 
 class UpgradeSubscriptionRequest(BaseModel):
     plan_name: str
+
+
+class DowngradeSubscriptionRequest(BaseModel):
+    plan_name: str
+
+
+class CancelPendingDowngradeRequest(BaseModel):
+    pass
 
 
 class RenewSubscriptionRequest(BaseModel):

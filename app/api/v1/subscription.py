@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.auth.dependencies import get_current_api_key
+from app.auth.dependencies import get_current_api_key, get_current_user
 from app.core.container import get_subscription_service
 from app.db.models.api_key import ApiKey
+from app.db.models.user import User
 from app.schemas.plans import PlanInfo
-from app.schemas.subscription import SubscriptionResponse
+from app.schemas.subscription import (
+    CancelPendingDowngradeRequest,
+    DowngradeSubscriptionRequest,
+    SubscriptionResponse,
+)
 from app.services.subscription_service import SubscriptionService
 from app.subscriptions.plans import PLANS
 
@@ -71,3 +76,47 @@ def list_plans():
         )
 
     return plans
+
+
+# ============================================================
+# SCHEDULE A DOWNGRADE (login required, free, takes effect
+# at the end of the current billing period)
+# ============================================================
+
+@router.post("/downgrade", response_model=SubscriptionResponse)
+def downgrade(
+    request: DowngradeSubscriptionRequest,
+    user: User = Depends(get_current_user),
+    service: SubscriptionService = Depends(get_subscription_service),
+):
+    try:
+        with service.uow:
+            subscription = service.schedule_downgrade(
+                organization_id=user.organization_id,
+                plan_name=request.plan_name,
+            )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return SubscriptionResponse.model_validate(subscription)
+
+
+# ============================================================
+# CANCEL A PENDING DOWNGRADE
+# ============================================================
+
+@router.post("/downgrade/cancel", response_model=SubscriptionResponse)
+def cancel_downgrade(
+    request: CancelPendingDowngradeRequest,
+    user: User = Depends(get_current_user),
+    service: SubscriptionService = Depends(get_subscription_service),
+):
+    try:
+        with service.uow:
+            subscription = service.cancel_pending_downgrade(
+                organization_id=user.organization_id,
+            )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return SubscriptionResponse.model_validate(subscription)

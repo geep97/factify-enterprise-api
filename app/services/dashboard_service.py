@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+from app.core.exceptions import SubscriptionNotFoundException
 from app.schemas.dashboard import (
     DashboardApiKeys,
     DashboardOrganization,
@@ -10,12 +11,14 @@ from app.schemas.dashboard import (
     DashboardUsagePoint,
     DashboardUsageSeriesResponse,
 )
+from app.services.subscription_service import SubscriptionService
 from app.unit_of_work.unit_of_work import UnitOfWork
 
 
 class DashboardService:
     def __init__(self, uow: UnitOfWork):
         self.uow = uow
+        self.subscription_service = SubscriptionService(uow)
 
     # ============================================================
     # GET DASHBOARD
@@ -33,11 +36,11 @@ class DashboardService:
         if organization is None:
             raise ValueError("Organization not found.")
 
-        subscription = self.uow.subscriptions.get_by_organization_id(
-            organization_id
-        )
-
-        if subscription is None:
+        try:
+            subscription = self.subscription_service.get_by_organization(
+                organization_id
+            )
+        except SubscriptionNotFoundException:
             raise ValueError("Subscription not found.")
 
         requests_used = self.uow.usage.get_monthly_usage_count(
@@ -67,8 +70,12 @@ class DashboardService:
             organization=DashboardOrganization.model_validate(
                 organization
             ),
-            subscription=DashboardSubscription.model_validate(
-                subscription
+            subscription=DashboardSubscription(
+                plan_name=subscription.plan_name,
+                status=subscription.status,
+                monthly_request_limit=subscription.monthly_request_limit,
+                pending_plan_name=subscription.pending_plan_name,
+                pending_plan_effective_at=subscription.pending_plan_effective_at,
             ),
             usage=DashboardUsage(
                 requests_used=requests_used,
@@ -83,7 +90,13 @@ class DashboardService:
                 inactive=inactive_keys,
             ),
             rate_limit=DashboardRateLimit(
-                requests_per_hour=rate_limit.requests_per_hour
+                # rate_limit row is refreshed by the lazy-apply check
+                # above when a downgrade just took effect, but the
+                # object we already loaded here may be stale in that
+                # exact instant — re-read it directly to be safe.
+                requests_per_hour=self.uow.rate_limits.get_by_organization_id(
+                    organization_id
+                ).requests_per_hour
             ),
         )
 

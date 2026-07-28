@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -21,6 +23,8 @@ class DashboardSubscription(BaseModel):
     plan_name: str
     status: str
     monthly_request_limit: int
+    pending_plan_name: str | None = None
+    pending_plan_effective_at: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
